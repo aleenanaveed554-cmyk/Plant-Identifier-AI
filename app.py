@@ -363,7 +363,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 font-family: 'Sans', sans-serif;
-    }
+    
     .stApp {
         background:
           radial-gradient(circle at 85% 5%, rgba(125, 190, 130, .13), transparent 28%),
