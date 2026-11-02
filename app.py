@@ -362,7 +362,7 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-Sans', sans-serif;
+"font-family: 'Sans', sans-serif;"
     }
     .stApp {
         background:
