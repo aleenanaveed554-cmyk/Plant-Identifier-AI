@@ -1,27 +1,4 @@
-import os
-import base64
-from io import BytesIO
-
-import streamlit as st
-from groq import Groq
-from PIL import Image
-
-# -------------------- Page setup --------------------
-st.set_page_config(
-    page_title="Plant Identifier AI",
-    page_icon="🌿",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
-
-# -------------------- Styling --------------------
-st.markdown(
-    """
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
-
-    html, body, [class*="css"] {
-        font-family: 'DM Sans', sans-serif;
+"Plant Identifier Aly: 'DM Sans', sans-serif;
     }
     .stApp {
         background:
