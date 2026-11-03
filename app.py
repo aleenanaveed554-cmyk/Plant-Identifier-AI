@@ -1,26 +1,182 @@
-"Plant Identifier Aly: 'DM Sans', sans-serif;
-    }
-    .stApp {
-        background:
-          radial-gradient(circle at 85% 5%, rgba(125, 190, 130, .13), transparent 28%),
-          linear-gradient(135deg, #f7faf6 0%, #eef5ed 100%);
-    }
-    [data-testid="stSidebar"] {
-        background: #102d24;
-    }
-    [data-testid="stSidebar"] * {
-        color: #f2f8f1 !important;
-    }
-    .hero {
-        padding: 30px 32px;
-        border-radius: 24px;
-        background: linear-gradient(120deg, #143c2d, #286b49);
-        color: white;
-        margin-bottom: 24px;
-        box-shadow: 0 14px 35px rgba(22, 65, 44, .15);
-    }
-    .hero h1 {
-        color: white;
+
+import streamlit as st
+import base64
+import os
+from groq import Groq
+
+# Page Settings
+st.set_page_config(
+    page_title="Plant Identifier AI",
+    page_icon="🌿",
+    layout="wide"
+)
+
+# Custom Design
+st.markdown("""
+<style>
+.stApp {
+    background: linear-gradient(135deg, #f7faf6, #e8f5e9);
+}
+h1, h2, h3, p, label {
+    color: #000000 !important;
+}
+.result-box {
+    background: white;
+    padding: 22px;
+    border-radius: 15px;
+    border: 1px solid #d5e8d5;
+    color: black !important;
+}
+.result-box p, .result-box h3, .result-box li {
+    color: black !important;
+}
+.stButton button {
+    background-color: #218838;
+    color: white;
+    border-radius: 10px;
+    border: none;
+}
+.stButton button:hover {
+    background-color: #176b2c;
+    color: white;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# Header
+st.title("🌿 Plant Identifier AI")
+st.write("Upload a plant image and let AI identify it.")
+
+st.divider()
+
+# Main Layout
+col1, col2 = st.columns(2)
+
+with col1:
+    st.subheader("📷 Upload Plant Image")
+
+    uploaded_file = st.file_uploader(
+        "Choose a plant image",
+        type=["jpg", "jpeg", "png", "webp"]
+    )
+
+    if uploaded_file:
+        st.image(uploaded_file, caption="Uploaded Plant", use_container_width=True)
+
+with col2:
+    st.subheader("🔍 Plant Analysis")
+
+    st.write(
+        "Our AI will analyze your plant image "
+        "and provide its name, features and care information."
+    )
+
+    analyze = st.button(
+        "Identify Plant 🌱",
+        use_container_width=True
+    )
+
+    if analyze:
+
+        if uploaded_file is None:
+            st.warning("Please upload a plant image first.")
+
+        else:
+            try:
+                # Get API Key
+                api_key = st.secrets.get("GROQ_API_KEY", os.getenv("GROQ_API_KEY"))
+
+                if not api_key:
+                    st.error("Groq API Key is missing. Please add it in Streamlit Secrets.")
+
+                else:
+                    client = Groq(api_key=api_key)
+
+                    # Convert Image to Base64
+                    image_bytes = uploaded_file.getvalue()
+                    encoded_image = base64.b64encode(
+                        image_bytes
+                    ).decode("utf-8")
+
+                    mime_type = uploaded_file.type
+
+                    # AI Analysis
+                    with st.spinner("AI is analyzing your plant... 🌿"):
+
+                        response = client.chat.completions.create(
+                            model="qwen/qwen3.8-27b",
+                            messages=[
+                                {
+                                    "role": "system",
+                                    "content": (
+                                        "You are a helpful plant identification AI. "
+                                        "Analyze plant images carefully. "
+                                        "If you cannot identify a plant confidently, "
+                                        "say so clearly. Never claim a plant is safe "
+                                        "to eat or use as medicine based only on an image."
+                                    )
+                                },
+                                {
+                                    "role": "user",
+                                    "content": [
+                                        {
+                                            "type": "text",
+                                            "text": """
+                                            Identify this plant and provide:
+
+                                            1. Common Name
+                                            2. Scientific Name
+                                            3. Plant Description
+                                            4. Main Features
+                                            5. Growing Conditions
+                                            6. Watering Requirements
+                                            7. Basic Care Tips
+
+                                            If identification is uncertain, explain why.
+                                            """
+                                        },
+                                        {
+                                            "type": "image_url",
+                                            "image_url": {
+                                                "url": f"data:{mime_type};base64,{encoded_image}"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ],
+                            temperature=0.2,
+                            max_completion_tokens=1200
+                        )
+
+                    # Display Result
+                    result = response.choices[0].message.content
+
+                    st.markdown(
+                        '<div class="result-box">',
+                        unsafe_allow_html=True
+                    )
+
+                    st.subheader("🌱 Plant Identification Result")
+                    st.markdown(result)
+
+                    st.markdown("</div>", unsafe_allow_html=True)
+
+                    st.info(
+                        "AI identification can be incorrect. "
+                        "Do not eat or use a plant based only on this result."
+                    )
+
+            except Exception as e:
+                st.error(f"Something went wrong: {e}")
+
+st.divider()
+
+# Footer
+st.markdown(
+    "<center>🌿 Plant Identifier AI | Powered by Generative AI</center>",
+    unsafe_allow_html=True
+)
+
         font-size: clamp(2rem, 4vw, 3rem);
         margin: 0 0 8px 0;
         font-weight: 800;
